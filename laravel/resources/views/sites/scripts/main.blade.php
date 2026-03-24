@@ -1,0 +1,4 @@
+<?php
+
+?>
+console.log('{{ $origin }}');
