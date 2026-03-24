@@ -1,0 +1,65 @@
+networks:
+    docker-laravel-network:
+        driver: bridge
+        name: docker_laravel_network
+
+services:
+    laravel_nginx:
+        container_name: laravel_nginx
+        build:
+            context: ./
+            dockerfile: docker/nginx/Dockerfile
+        volumes:
+            - ./laravel:/var/www/laravel
+            - ./docker/nginx/conf.d:/etc/nginx/conf.d
+        ports:
+            - "80:80"
+        expose:
+            - 80
+        networks:
+            - docker-laravel-network
+        depends_on:
+            php85: { condition: service_started }
+
+    php85:
+        container_name: php85
+        build:
+            context: ./
+            dockerfile: ./docker/php-fpm8.5/Dockerfile
+        networks:
+            - docker-laravel-network
+        volumes:
+            - ./laravel:/var/www/laravel
+
+    db_laravel:
+        container_name: db_laravel
+        image: mysql:5.7
+        restart: always
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: 'modx_pass'
+            MYSQL_DATABASE: 'modx'
+            MYSQL_PASSWORD: 'modx_pass'
+        networks:
+            - docker-laravel-network
+        volumes:
+            - ./docker/mysql/volume:/var/lib/mysql
+            - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+        
+
+    phpmyadmin:
+        container_name: phpmyadmin
+        depends_on:
+            - db_laravel
+        image: phpmyadmin
+        restart: always
+        ports:
+            - "8090:80"
+        environment:
+            PMA_HOST: db_laravel
+            PMA_USER: root
+            PMA_PASSWORD: 'modx_pass'
+            PMA_PORT: 3306
+        networks:
+            - docker-laravel-network

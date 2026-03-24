@@ -1,0 +1,5 @@
+docker/mysql/volume
+.data
+node_modules
+package-lock.json
+.idea
